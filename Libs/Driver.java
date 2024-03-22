@@ -3,7 +3,7 @@ package Libs;
 import java.util.concurrent.Semaphore;
 
 public class Driver extends Thread {
-    private Character originalSide;
+    private Character originalSide; // 'L' or 'R'
     private String identifier;
     private Integer crossingDuration;
     private Integer stayDuration;
@@ -21,8 +21,77 @@ public class Driver extends Thread {
         this.stayDuration = stayDuration;
     }
 
-    public void run() {
+    public void crossBridge() {
+        System.out.println(this.identifier + " is crossing the bridge from " + this.originalSide);
+    }
 
+
+    public void run() {
+        if(this.originalSide == 'L') {
+            while(true) {
+                try {
+                    right_mutex.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                if(right_count == 1) {
+                    try {
+                        traffic.acquire();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                right_mutex.release();
+
+                this.crossBridge();
+
+                try {
+                    right_mutex.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                right_count = right_count + 1;
+                if(right_count == 0) {
+                    traffic.release();
+                }
+            }
+        }
+        else {
+            while(true) {
+                try {
+                    left_mutex.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                left_count = left_count + 1;
+                if(left_count == 1) {
+                    try {
+                        traffic.acquire();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                left_mutex.release();
+
+                this.crossBridge();
+
+                try {
+                    left_mutex.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                left_count = left_count - 1;
+                if(left_count == 0) {
+                    traffic.release();
+                }
+                left_mutex.release();
+            }
+        }
     }
 
     public Character getOriginalSide() {
