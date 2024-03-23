@@ -12,6 +12,6 @@ public class InformationPanel extends JPanel {
         this.boardHeight = boardHeight;
 
         setBackground(Color.DARK_GRAY);
-        this.setPreferredSize(new Dimension(boardWith, boardHeight));
+        this.setPreferredSize(new Dimension(boardWith, 200));
     }
 }
