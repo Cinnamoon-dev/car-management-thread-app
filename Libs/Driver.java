@@ -25,72 +25,75 @@ public class Driver extends Thread {
         System.out.println(this.identifier + " is crossing the bridge from " + this.originalSide);
     }
 
+    public void waitInOtherSide() {
+        System.out.println(this.identifier + " arrived at the other side from " + this.originalSide);
+    }
 
     public void run() {
-        if(this.originalSide == 'L') {
-            while(true) {
+        if(this.originalSide == 'R') {
+            try {
+                right_mutex.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            if(right_count == 1) {
                 try {
-                    right_mutex.acquire();
+                    traffic.acquire();
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
-                }
-
-                if(right_count == 1) {
-                    try {
-                        traffic.acquire();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                right_mutex.release();
-
-                this.crossBridge();
-
-                try {
-                    right_mutex.acquire();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                right_count = right_count + 1;
-                if(right_count == 0) {
-                    traffic.release();
                 }
             }
+            right_mutex.release();
+
+            this.crossBridge();
+
+            try {
+                right_mutex.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            right_count = right_count + 1;
+            if(right_count == 0) {
+                traffic.release();
+            }
+
+            this.waitInOtherSide();
         }
         else {
-            while(true) {
-                try {
-                    left_mutex.acquire();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                left_count = left_count + 1;
-                if(left_count == 1) {
-                    try {
-                        traffic.acquire();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-                left_mutex.release();
-
-                this.crossBridge();
-
-                try {
-                    left_mutex.acquire();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                left_count = left_count - 1;
-                if(left_count == 0) {
-                    traffic.release();
-                }
-                left_mutex.release();
+            try {
+                left_mutex.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
+
+            left_count = left_count + 1;
+            if(left_count == 1) {
+                try {
+                    traffic.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            left_mutex.release();
+
+            this.crossBridge();
+
+            try {
+                left_mutex.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            left_count = left_count - 1;
+            if(left_count == 0) {
+                traffic.release();
+            }
+            left_mutex.release();
+
+            this.waitInOtherSide();
         }
     }
 
