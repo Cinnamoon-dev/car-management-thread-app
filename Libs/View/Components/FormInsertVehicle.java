@@ -1,6 +1,8 @@
 package Libs.View.Components;
 
 import Libs.Driver;
+import Libs.View.MainView;
+import com.sun.tools.javac.Main;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +25,7 @@ public class FormInsertVehicle extends JFrame{
     private Character origin_side_vehicle;
 
 
-    public FormInsertVehicle( Character originSideVehicle ){
+    public FormInsertVehicle( char originSideVehicle ){
         setTitle("Inserindo um novo veiculo");
         setSize(500, 500);
         setLocationRelativeTo(null);
@@ -35,7 +37,7 @@ public class FormInsertVehicle extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 Driver driver = new Driver(
-                        originSideVehicle, "1", Integer.getInteger(travessia.getText()), Integer.getInteger(permanenceia.getText())
+                        originSideVehicle, "1", Integer.getInteger(travessia.getText()), Integer.getInteger(permanenceia.getText()), MainView.getInformationPanel()
                 );
                 driver.start(); // start the thread
                 cancel.doClick();
