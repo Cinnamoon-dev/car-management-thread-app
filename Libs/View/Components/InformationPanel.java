@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 
 public class InformationPanel extends JPanel {
+    /*
+    * Componente responsável por mostrar as informações de eventos ocorridos dentro do jogo.
+    * */
     int boardWith;
     int boardHeight;
 
