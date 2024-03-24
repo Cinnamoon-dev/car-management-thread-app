@@ -65,44 +65,56 @@ public class Driver extends Thread {
     public void run() {
         if(this.originalSide == 'R') {
             down(right_mutex);
-
             right_count = right_count + 1;
             System.out.println("RC before: " + right_count);
             if(right_count == 1) {
                 down(traffic);
             }
-
             up(right_mutex);
 
             this.crossBridge();
 
             down(right_mutex);
-
             right_count = right_count - 1;
             System.out.println("RC after: " + right_count);
             if(right_count == 0) {
                 up(traffic);
             }
-
             up(right_mutex);
 
             this.waitInOtherSide();
-        }
-        else {
-            down(left_mutex);
 
+            // Calling the left_count must happen after the wait method
+            // Because the car will only go back to traffic after the waiting period
+            down(left_mutex);
             left_count = left_count + 1;
             System.out.println("LC before: " + left_count);
             if(left_count == 1) {
                 down(traffic);
             }
+            up(left_mutex);
 
+            this.crossBridge();
+
+            left_count = left_count - 1;
+            System.out.println("LC after: " + left_count);
+            if(left_count == 0) {
+                up(traffic);
+            }
+            up(left_mutex);
+        }
+        else {
+            down(left_mutex);
+            left_count = left_count + 1;
+            System.out.println("LC before: " + left_count);
+            if(left_count == 1) {
+                down(traffic);
+            }
             up(left_mutex);
 
             this.crossBridge();
 
             down(left_mutex);
-
             left_count = left_count - 1;
             System.out.println("LC after: " + left_count);
             if(left_count == 0) {
@@ -111,6 +123,24 @@ public class Driver extends Thread {
             up(left_mutex);
 
             this.waitInOtherSide();
+
+            down(right_mutex);
+            right_count = right_count + 1;
+            System.out.println("RC before: " + right_count);
+            if(right_count == 1) {
+                down(traffic);
+            }
+            up(right_mutex);
+            
+            this.crossBridge();
+
+            down(right_mutex);
+            right_count = right_count - 1;
+            System.out.println("RC after: " + right_count);
+            if(right_count == 0) {
+                up(traffic);
+            }
+            up(right_mutex);
         }
     }
 
