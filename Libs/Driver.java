@@ -21,6 +21,30 @@ public class Driver extends Thread {
         this.stayDuration = stayDuration;
     }
 
+    public static void down(Semaphore semaphore) {
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void down(Semaphore semaphore, Integer permits) {
+        try {
+            semaphore.acquire(permits);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void up(Semaphore semaphore) {
+        semaphore.release();
+    }
+
+    public static void up(Semaphore semaphore, Integer permits) {
+        semaphore.release(permits);
+    }
+
     public void crossBridge() {
         System.out.println(this.identifier + " is crossing the bridge from " + this.originalSide);
         if(this.originalSide.equals('R')) {
@@ -40,73 +64,51 @@ public class Driver extends Thread {
 
     public void run() {
         if(this.originalSide == 'R') {
-            try {
-                right_mutex.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            down(right_mutex);
 
             right_count = right_count + 1;
             System.out.println("RC before: " + right_count);
             if(right_count == 1) {
-                try {
-                    traffic.acquire();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                down(traffic);
             }
-            right_mutex.release();
+
+            up(right_mutex);
 
             this.crossBridge();
 
-            try {
-                right_mutex.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            down(right_mutex);
 
             right_count = right_count - 1;
             System.out.println("RC after: " + right_count);
             if(right_count == 0) {
-                traffic.release();
+                up(traffic);
             }
-            right_mutex.release();
+
+            up(right_mutex);
 
             this.waitInOtherSide();
         }
         else {
-            try {
-                left_mutex.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            down(left_mutex);
 
             left_count = left_count + 1;
             System.out.println("LC before: " + left_count);
             if(left_count == 1) {
-                try {
-                    traffic.acquire();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                down(traffic);
             }
 
-            left_mutex.release();
+            up(left_mutex);
 
             this.crossBridge();
 
-            try {
-                left_mutex.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            down(left_mutex);
 
             left_count = left_count - 1;
             System.out.println("LC after: " + left_count);
             if(left_count == 0) {
-                traffic.release();
+                up(traffic);
             }
-            left_mutex.release();
+            up(left_mutex);
 
             this.waitInOtherSide();
         }
