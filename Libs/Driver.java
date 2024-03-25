@@ -1,5 +1,6 @@
 package Libs;
 
+import java.util.Date;
 import java.util.concurrent.Semaphore;
 
 public class Driver extends Thread {
@@ -55,13 +56,26 @@ public class Driver extends Thread {
     }
 
     public void waitInOtherSide() {
+        Date arrivalTime = new Date();
         if(this.originalSide.equals('R')) {
             System.out.println(this.identifier + " is waiting at side " + "L");
             return;
         }
         System.out.println(this.identifier + " is waiting at side " + "R");
+
+        // Core logic below
+        // Remove prints when done with debugging
+        while (getAgeInSeconds(arrivalTime) < this.stayDuration) {
+            new Date().getTime();
+        }
+        System.out.println("Time passed: " + getAgeInSeconds(arrivalTime));
     }
 
+    public static long getAgeInSeconds(Date initialTime) {
+        Date now = new Date();
+        return ((now.getTime() - initialTime.getTime()) / 1000);
+    }
+    
     public void run() {
         if(this.originalSide == 'R') {
             down(right_mutex);
@@ -96,6 +110,7 @@ public class Driver extends Thread {
 
             this.crossBridge();
 
+            down(left_mutex);
             left_count = left_count - 1;
             System.out.println("LC after: " + left_count);
             if(left_count == 0) {
