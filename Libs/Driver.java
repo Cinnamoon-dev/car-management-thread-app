@@ -1,5 +1,8 @@
 package Libs;
 
+import Libs.View.Components.InformationPanel;
+
+import javax.swing.*;
 import java.util.concurrent.Semaphore;
 
 public class Driver extends Thread {
@@ -7,6 +10,8 @@ public class Driver extends Thread {
     private String identifier;
     private Integer crossingDuration;
     private Integer stayDuration;
+    private final InformationPanel informationPanel;
+
 
     public static Semaphore right_mutex = new Semaphore(1);
     public static Semaphore left_mutex = new Semaphore(1);
@@ -14,19 +19,26 @@ public class Driver extends Thread {
     public static int right_count = 0;
     public static int left_count = 0;
 
-    public Driver(Character originalSide, String identifier, Integer crossingDuration, Integer stayDuration) {
+    public Driver(char originalSide, String identifier, Integer crossingDuration, Integer stayDuration, InformationPanel informationPanel ){
         this.originalSide = originalSide;
         this.identifier = identifier;
         this.crossingDuration = crossingDuration;
         this.stayDuration = stayDuration;
+        this.informationPanel = informationPanel;
     }
 
     public void crossBridge() {
-        System.out.println(this.identifier + " is crossing the bridge from " + this.originalSide);
+        String messageEvent = this.identifier + " is crossing the bridge from " + this.originalSide;
+        SwingUtilities.invokeLater(() -> {
+            this.informationPanel.addMessageEvent(messageEvent);
+        });
     }
 
     public void waitInOtherSide() {
-        System.out.println(this.identifier + " arrived at the other side from " + this.originalSide);
+        String messageEvent = this.identifier + " arrived at the other side from " + this.originalSide;
+        SwingUtilities.invokeLater(() -> {
+            this.informationPanel.addMessageEvent(messageEvent);
+        });
     }
 
     public void run() {
