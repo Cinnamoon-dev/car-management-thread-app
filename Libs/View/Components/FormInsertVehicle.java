@@ -2,62 +2,74 @@ package Libs.View.Components;
 
 import Libs.Driver;
 import Libs.View.MainView;
-import com.sun.tools.javac.Main;
 
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.*;
 
-public class FormInsertVehicle extends JFrame{
+
+public class FormInsertVehicle extends JPanel {
 
     /*
-    * Formulário para pegar os dados de condições de existencia de um determinado veiculo.
-    * */
+     * Formulário para pegar os dados de condições de existencia de um determinado veiculo.
+     * */
 
-    public JPanel panelMain;
-    private JButton submit;
-    private JButton cancel;
-    private JLabel travessia;
-    private JLabel permanenceia;
-    private JTextField tempo_travessia;
-    private JTextField tempo_permanencia;
-    private Character origin_side_vehicle;
+    Integer driverIdentifier = 0;
 
+    public FormInsertVehicle(int maxComponentSize){
 
-    public FormInsertVehicle( char originSideVehicle ){
-        setTitle("Inserindo um novo veiculo");
-        setSize(500, 500);
-        setLocationRelativeTo(null);
+        setPreferredSize(new Dimension(maxComponentSize, 150));
 
-        this.origin_side_vehicle = originSideVehicle;
+        this.setAlignmentY(0);
+        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        // submit the values to create a vehicle
-        submit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Driver driver = new Driver(
-                        originSideVehicle, "1", Integer.getInteger(travessia.getText()), Integer.getInteger(permanenceia.getText()), MainView.getInformationPanel()
-                );
-                driver.start(); // start the thread
-                cancel.doClick();
-            }
+        JButton insertLeft = new JButton("Insert Left");
+        JButton insertRigth = new JButton("Insert Rigth");
+        JLabel travessiaLabel = new JLabel("Tempo de Travessia:");
+        JLabel permanenciaLabel = new JLabel("Tempo de Permanência:");
+        JTextField tempo_travessia =  new JTextField();
+        JTextField tempo_permanencia = new JTextField();
+
+        insertLeft.setMaximumSize(new Dimension(maxComponentSize, 75));
+        insertRigth.setMaximumSize(new Dimension(maxComponentSize, 75));
+
+        JPanel ButtonsBox = new JPanel();
+        ButtonsBox.setAlignmentX(0);
+        ButtonsBox.add(insertLeft);
+        ButtonsBox.add(insertRigth);
+        ButtonsBox.setVisible(true);
+
+        this.add(travessiaLabel);
+        this.add(tempo_travessia);
+        this.add(permanenciaLabel);
+        this.add(tempo_permanencia);
+        this.add(ButtonsBox);
+
+        insertLeft.addActionListener(e -> {
+            Driver driver = createDriver('L', tempo_travessia.getText(), tempo_permanencia.getText());
+            this.clearState(tempo_permanencia, tempo_travessia);
+            driver.start(); // Inicia a thread do motorista
         });
 
-        // cancel operation
-        cancel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Window[] windows = Window.getWindows();
-                for(Window janela_aberta : windows){
-                    if( janela_aberta instanceof FormInsertVehicle ){
-                        janela_aberta.dispose();
-                        break; // fechando apenas uma janela do meu formulario
-                    }
-                }
-            }
+        insertRigth.addActionListener(e -> {
+            Driver driver = createDriver('R', tempo_travessia.getText(), tempo_permanencia.getText());
+            this.clearState(tempo_permanencia, tempo_travessia);
+            driver.start(); // inicia a thread do motorista
         });
     }
 
+    private Driver createDriver(char originSideVehicle, String tempo_travessia, String tempo_permanencia){
+        driverIdentifier++; // increment identifier
+        return new Driver(
+                originSideVehicle,
+                this.driverIdentifier.toString(),
+                Integer.parseInt(tempo_travessia),
+                Integer.parseInt(tempo_permanencia),
+                MainView.getInformationPanel()
+        );
+    }
 
+    private void clearState(JTextField tempoPermanencia, JTextField tempoTravessia){
+        tempoTravessia.setText("");
+        tempoPermanencia.setText("");
+    }
 }
