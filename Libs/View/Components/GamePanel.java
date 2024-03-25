@@ -22,6 +22,7 @@ public class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        System.out.println("panel game called");
         ImageIcon imageIcon = new ImageIcon("./Libs/View/Assets/Ponte.png");
         g.drawImage(imageIcon.getImage(), 0, 0, getWidth(), getHeight(), this);
     }

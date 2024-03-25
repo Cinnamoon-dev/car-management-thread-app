@@ -1,11 +1,11 @@
 package Libs.View;
 
 import Libs.View.Components.ControlPanel;
+import Libs.View.Components.FormInsertVehicle;
 import Libs.View.Components.GamePanel;
 import Libs.View.Components.InformationPanel;
 
 import java.awt.*;
-import java.util.concurrent.Flow;
 import javax.swing.*;
 
 
@@ -21,22 +21,24 @@ public class MainView extends JFrame{
     * reference : https://excalidraw.com/#json=_wFBU5tuFjNCbSIckWDAa,ax4NLfgzU-rUoPYsYSROug
     * */
 
+    static InformationPanel informationPanel;
+
     final int GamePanelWidth = 700;
-    final int GamePanelHeight = 500;
+    final int GamePanelHeight = 700;
 
     final int InformationPanelWidth = 300;
-    final int InformationPanelHeight = 700;
+    final int InformationPanelHeight = 500;
 
     final int ControlVehiclePanelWidth = InformationPanelWidth;
-    final int ControlVehiclePanelHeight = GamePanelHeight - InformationPanelHeight;
 
     final int MainBoardWidth = GamePanelWidth + InformationPanelWidth + 100;
-    final int MainBoardHeight = Math.max(GamePanelHeight, InformationPanelHeight) + 100;
+    final int MainBoardHeight = Math.max(GamePanelHeight, InformationPanelHeight) + 150;
 
     public MainView(){
 
         // configurações da view main
 
+        setResizable(false);
         setTitle("Car Management");
         setLocationRelativeTo(null);
         setSize(MainBoardWidth, MainBoardHeight);
@@ -47,6 +49,7 @@ public class MainView extends JFrame{
         GridBagConstraints gbc = new GridBagConstraints();
 
         // instanciando outros componentes à tela principal
+
         GamePanel gamePanel = new GamePanel(GamePanelWidth, GamePanelHeight);
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -56,25 +59,30 @@ public class MainView extends JFrame{
         gbc.fill = GridBagConstraints.HORIZONTAL;
         this.add(gamePanel, gbc);
 
-        ControlPanel controlPanel = new ControlPanel(ControlVehiclePanelWidth, ControlVehiclePanelHeight);
+        ControlPanel formInsertVehicle = new ControlPanel( ControlVehiclePanelWidth );
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.weightx = 1;
-        gbc.weighty = 0.5;
+        gbc.weighty = 0;
         gbc.gridheight = 1;
         gbc.fill = GridBagConstraints.BOTH;
-        this.add(controlPanel, gbc);
+        this.add(formInsertVehicle, gbc);
 
-        InformationPanel informationPanel = new InformationPanel(InformationPanelWidth, InformationPanelHeight);
+        InformationPanel informationPanel = new InformationPanel();
+        this.informationPanel = informationPanel;
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.weightx = 1;
-        gbc.weighty = 0.5;
+        gbc.weighty = 1;
         gbc.gridheight = 1;
         gbc.fill = GridBagConstraints.BOTH;
-        this.add(informationPanel, gbc);
+        this.getContentPane().add(informationPanel,gbc);
 
         setVisible(true);
+    }
+
+    public static InformationPanel getInformationPanel(){
+        return informationPanel;
     }
 }
 
