@@ -1,5 +1,8 @@
 package Libs;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.concurrent.Semaphore;
 
 public class Driver extends Thread {
@@ -7,6 +10,9 @@ public class Driver extends Thread {
     private String identifier;
     private Integer crossingDuration;
     private Integer stayDuration;
+
+    public static Semaphore queue_mutex = new Semaphore(1);
+    private static ArrayList<String> crossingQueue = new ArrayList<String>();
 
     public static Semaphore right_mutex = new Semaphore(1);
     public static Semaphore left_mutex = new Semaphore(1);
@@ -21,79 +27,168 @@ public class Driver extends Thread {
         this.stayDuration = stayDuration;
     }
 
+    public static void down(Semaphore semaphore) {
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void down(Semaphore semaphore, Integer permits) {
+        try {
+            semaphore.acquire(permits);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void up(Semaphore semaphore) {
+        semaphore.release();
+    }
+
+    public static void up(Semaphore semaphore, Integer permits) {
+        semaphore.release(permits);
+    }
+
+    public String Message(String message) {
+        Message(message);
+        return message;
+    }
+
     public void crossBridge() {
-        System.out.println(this.identifier + " is crossing the bridge from " + this.originalSide);
+        Date arrivalDate = new Date();
+
+        down(queue_mutex);
+        crossingQueue.add(0, this.identifier);
+        Message(this.identifier + " is crossing the bridge from " + this.originalSide);
+        Message(Arrays.toString(crossingQueue.toArray()));
+        up(queue_mutex);
+
+        while(getAgeInSeconds(arrivalDate) < this.crossingDuration) {
+            new Date().getTime();
+        }
+
+        down(queue_mutex);
+        while (crossingQueue.indexOf(this.identifier) != crossingQueue.size() - 1) {
+            up(queue_mutex);
+            new Date().getTime();
+            down(queue_mutex);
+        }
+
+        crossingQueue.remove(this.identifier);
+        if(this.originalSide.equals('R')) {
+            Message(this.identifier + " arrived at L");
+            Message(Arrays.toString(crossingQueue.toArray()));
+            up(queue_mutex);
+            return;
+        }
+        Message(this.identifier + " arrived at R");
+        Message(Arrays.toString(crossingQueue.toArray()));
+        up(queue_mutex);
     }
 
     public void waitInOtherSide() {
-        System.out.println(this.identifier + " arrived at the other side from " + this.originalSide);
+        Date arrivalTime = new Date();
+        if(this.originalSide.equals('R')) {
+            Message(this.identifier + " is waiting at side " + "L");
+            return;
+        }
+        Message(this.identifier + " is waiting at side " + "R");
+
+        // Core logic below
+        // Remove prints when done with debugging
+        while (getAgeInSeconds(arrivalTime) < this.stayDuration) {
+            new Date().getTime();
+        }
+        Message("Time passed: " + getAgeInSeconds(arrivalTime));
     }
 
+    public static long getAgeInSeconds(Date initialTime) {
+        Date now = new Date();
+        return ((now.getTime() - initialTime.getTime()) / 1000);
+    }
+    
     public void run() {
         if(this.originalSide == 'R') {
-            try {
-                right_mutex.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
+            down(right_mutex);
+            right_count = right_count + 1;
+            Message("RC before: " + right_count);
             if(right_count == 1) {
-                try {
-                    traffic.acquire();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                down(traffic);
             }
-            right_mutex.release();
+            up(right_mutex);
 
             this.crossBridge();
 
-            try {
-                right_mutex.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-            right_count = right_count + 1;
+            down(right_mutex);
+            right_count = right_count - 1;
+            Message("RC after: " + right_count);
             if(right_count == 0) {
-                traffic.release();
+                up(traffic);
             }
+            up(right_mutex);
 
             this.waitInOtherSide();
+
+            // Calling the left_count must happen after the wait method
+            // Because the car will only go back to traffic after the waiting period
+            down(left_mutex);
+            left_count = left_count + 1;
+            Message("LC before: " + left_count);
+            if(left_count == 1) {
+                down(traffic);
+            }
+            up(left_mutex);
+
+            this.crossBridge();
+
+            down(left_mutex);
+            left_count = left_count - 1;
+            Message("LC after: " + left_count);
+            if(left_count == 0) {
+                up(traffic);
+            }
+            up(left_mutex);
         }
         else {
-            try {
-                left_mutex.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
+            down(left_mutex);
             left_count = left_count + 1;
+            Message("LC before: " + left_count);
             if(left_count == 1) {
-                try {
-                    traffic.acquire();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                down(traffic);
             }
-
-            left_mutex.release();
+            up(left_mutex);
 
             this.crossBridge();
 
-            try {
-                left_mutex.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
+            down(left_mutex);
             left_count = left_count - 1;
+            Message("LC after: " + left_count);
             if(left_count == 0) {
-                traffic.release();
+                up(traffic);
             }
-            left_mutex.release();
+            up(left_mutex);
 
             this.waitInOtherSide();
+
+            down(right_mutex);
+            right_count = right_count + 1;
+            Message("RC before: " + right_count);
+            if(right_count == 1) {
+                down(traffic);
+            }
+            up(right_mutex);
+            
+            this.crossBridge();
+
+            down(right_mutex);
+            right_count = right_count - 1;
+            Message("RC after: " + right_count);
+            if(right_count == 0) {
+                up(traffic);
+            }
+            up(right_mutex);
         }
     }
 
