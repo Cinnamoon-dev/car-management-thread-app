@@ -1,5 +1,7 @@
 package Libs;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.Semaphore;
 
@@ -8,6 +10,9 @@ public class Driver extends Thread {
     private String identifier;
     private Integer crossingDuration;
     private Integer stayDuration;
+
+    public static Semaphore queue_mutex = new Semaphore(1);
+    private static ArrayList<String> crossingQueue = new ArrayList<String>();
 
     public static Semaphore right_mutex = new Semaphore(1);
     public static Semaphore left_mutex = new Semaphore(1);
@@ -47,12 +52,35 @@ public class Driver extends Thread {
     }
 
     public void crossBridge() {
+        Date arrivalDate = new Date();
+
+        down(queue_mutex);
+        crossingQueue.add(0, this.identifier);
         System.out.println(this.identifier + " is crossing the bridge from " + this.originalSide);
+        System.out.println(Arrays.toString(crossingQueue.toArray()));
+        up(queue_mutex);
+
+        while(getAgeInSeconds(arrivalDate) < this.crossingDuration) {
+            new Date().getTime();
+        }
+
+        down(queue_mutex);
+        while (crossingQueue.indexOf(this.identifier) != crossingQueue.size() - 1) {
+            up(queue_mutex);
+            new Date().getTime();
+            down(queue_mutex);
+        }
+
+        crossingQueue.remove(this.identifier);
         if(this.originalSide.equals('R')) {
             System.out.println(this.identifier + " arrived at L");
+            System.out.println(Arrays.toString(crossingQueue.toArray()));
+            up(queue_mutex);
             return;
         }
         System.out.println(this.identifier + " arrived at R");
+        System.out.println(Arrays.toString(crossingQueue.toArray()));
+        up(queue_mutex);
     }
 
     public void waitInOtherSide() {
