@@ -51,13 +51,18 @@ public class Driver extends Thread {
         semaphore.release(permits);
     }
 
+    public String Message(String message) {
+        Message(message);
+        return message;
+    }
+
     public void crossBridge() {
         Date arrivalDate = new Date();
 
         down(queue_mutex);
         crossingQueue.add(0, this.identifier);
-        System.out.println(this.identifier + " is crossing the bridge from " + this.originalSide);
-        System.out.println(Arrays.toString(crossingQueue.toArray()));
+        Message(this.identifier + " is crossing the bridge from " + this.originalSide);
+        Message(Arrays.toString(crossingQueue.toArray()));
         up(queue_mutex);
 
         while(getAgeInSeconds(arrivalDate) < this.crossingDuration) {
@@ -73,30 +78,30 @@ public class Driver extends Thread {
 
         crossingQueue.remove(this.identifier);
         if(this.originalSide.equals('R')) {
-            System.out.println(this.identifier + " arrived at L");
-            System.out.println(Arrays.toString(crossingQueue.toArray()));
+            Message(this.identifier + " arrived at L");
+            Message(Arrays.toString(crossingQueue.toArray()));
             up(queue_mutex);
             return;
         }
-        System.out.println(this.identifier + " arrived at R");
-        System.out.println(Arrays.toString(crossingQueue.toArray()));
+        Message(this.identifier + " arrived at R");
+        Message(Arrays.toString(crossingQueue.toArray()));
         up(queue_mutex);
     }
 
     public void waitInOtherSide() {
         Date arrivalTime = new Date();
         if(this.originalSide.equals('R')) {
-            System.out.println(this.identifier + " is waiting at side " + "L");
+            Message(this.identifier + " is waiting at side " + "L");
             return;
         }
-        System.out.println(this.identifier + " is waiting at side " + "R");
+        Message(this.identifier + " is waiting at side " + "R");
 
         // Core logic below
         // Remove prints when done with debugging
         while (getAgeInSeconds(arrivalTime) < this.stayDuration) {
             new Date().getTime();
         }
-        System.out.println("Time passed: " + getAgeInSeconds(arrivalTime));
+        Message("Time passed: " + getAgeInSeconds(arrivalTime));
     }
 
     public static long getAgeInSeconds(Date initialTime) {
@@ -108,7 +113,7 @@ public class Driver extends Thread {
         if(this.originalSide == 'R') {
             down(right_mutex);
             right_count = right_count + 1;
-            System.out.println("RC before: " + right_count);
+            Message("RC before: " + right_count);
             if(right_count == 1) {
                 down(traffic);
             }
@@ -118,7 +123,7 @@ public class Driver extends Thread {
 
             down(right_mutex);
             right_count = right_count - 1;
-            System.out.println("RC after: " + right_count);
+            Message("RC after: " + right_count);
             if(right_count == 0) {
                 up(traffic);
             }
@@ -130,7 +135,7 @@ public class Driver extends Thread {
             // Because the car will only go back to traffic after the waiting period
             down(left_mutex);
             left_count = left_count + 1;
-            System.out.println("LC before: " + left_count);
+            Message("LC before: " + left_count);
             if(left_count == 1) {
                 down(traffic);
             }
@@ -140,7 +145,7 @@ public class Driver extends Thread {
 
             down(left_mutex);
             left_count = left_count - 1;
-            System.out.println("LC after: " + left_count);
+            Message("LC after: " + left_count);
             if(left_count == 0) {
                 up(traffic);
             }
@@ -149,7 +154,7 @@ public class Driver extends Thread {
         else {
             down(left_mutex);
             left_count = left_count + 1;
-            System.out.println("LC before: " + left_count);
+            Message("LC before: " + left_count);
             if(left_count == 1) {
                 down(traffic);
             }
@@ -159,7 +164,7 @@ public class Driver extends Thread {
 
             down(left_mutex);
             left_count = left_count - 1;
-            System.out.println("LC after: " + left_count);
+            Message("LC after: " + left_count);
             if(left_count == 0) {
                 up(traffic);
             }
@@ -169,7 +174,7 @@ public class Driver extends Thread {
 
             down(right_mutex);
             right_count = right_count + 1;
-            System.out.println("RC before: " + right_count);
+            Message("RC before: " + right_count);
             if(right_count == 1) {
                 down(traffic);
             }
@@ -179,7 +184,7 @@ public class Driver extends Thread {
 
             down(right_mutex);
             right_count = right_count - 1;
-            System.out.println("RC after: " + right_count);
+            Message("RC after: " + right_count);
             if(right_count == 0) {
                 up(traffic);
             }
