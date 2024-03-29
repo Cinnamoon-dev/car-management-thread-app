@@ -1,11 +1,9 @@
 package Libs.View;
 
-import Libs.View.Components.ControlPanel;
 import Libs.View.Components.FormInsertVehicle;
-import Libs.View.Components.GamePanel;
+import Libs.View.Components.GameViewBoard;
 import Libs.View.Components.InformationPanel;
 
-import java.awt.*;
 import javax.swing.*;
 
 
@@ -21,68 +19,29 @@ public class MainView extends JFrame{
     * reference : https://excalidraw.com/#json=_wFBU5tuFjNCbSIckWDAa,ax4NLfgzU-rUoPYsYSROug
     * */
 
-    static InformationPanel informationPanel;
+    public static GameViewBoard gameViewBoard;
+    public static InformationPanel informationViewBoard;
 
-    final int GamePanelWidth = 700;
-    final int GamePanelHeight = 700;
-
-    final int InformationPanelWidth = 300;
-    final int InformationPanelHeight = 500;
-
+    final int InformationPanelWidth = 512;
+    final int InformationPanelHeight = 300;
     final int ControlVehiclePanelWidth = InformationPanelWidth;
-
-    final int MainBoardWidth = GamePanelWidth + InformationPanelWidth + 100;
-    final int MainBoardHeight = Math.max(GamePanelHeight, InformationPanelHeight) + 150;
 
     public MainView(){
 
-        // configurações da view main
+        GameViewBoard gameViewBoard = new GameViewBoard();
+        FormInsertVehicle formInsertVehicle = new FormInsertVehicle(ControlVehiclePanelWidth);
+        InformationPanel informationViewBoard = new InformationPanel(ControlVehiclePanelWidth, InformationPanelHeight);
 
-        setResizable(false);
-        setTitle("Car Management");
-        setLocationRelativeTo(null);
-        setSize(MainBoardWidth, MainBoardHeight);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setPreferredSize(new Dimension(MainBoardWidth, MainBoardHeight));
+        MainView.gameViewBoard = gameViewBoard;
+        MainView.informationViewBoard = informationViewBoard;
 
-        setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        // instanciando outros componentes à tela principal
-
-        GamePanel gamePanel = new GamePanel(GamePanelWidth, GamePanelHeight);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 1.0;
-        gbc.weighty = 2.0;
-        gbc.gridheight = 2;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        this.add(gamePanel, gbc);
-
-        ControlPanel formInsertVehicle = new ControlPanel( ControlVehiclePanelWidth );
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.weightx = 1;
-        gbc.weighty = 0;
-        gbc.gridheight = 1;
-        gbc.fill = GridBagConstraints.BOTH;
-        this.add(formInsertVehicle, gbc);
-
-        InformationPanel informationPanel = new InformationPanel();
-        this.informationPanel = informationPanel;
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-        gbc.gridheight = 1;
-        gbc.fill = GridBagConstraints.BOTH;
-        this.getContentPane().add(informationPanel,gbc);
-
-        setVisible(true);
+        MainView.informationViewBoard.setLocation(0, 0);
+        MainView.gameViewBoard.setLocation(MainView.informationViewBoard.getWidth() + 20, 0);
+        formInsertVehicle.setLocation(gameViewBoard.getWidth() + MainView.informationViewBoard.getWidth() + 20, 0);
     }
 
-    public static InformationPanel getInformationPanel(){
-        return informationPanel;
+    public static InformationPanel getInformationViewBoard(){
+        return informationViewBoard;
     }
 }
 
