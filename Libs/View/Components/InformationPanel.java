@@ -3,7 +3,7 @@ package Libs.View.Components;
 import javax.swing.*;
 import java.awt.*;
 
-public class InformationPanel extends JScrollPane{
+public class InformationPanel extends JFrame{
     /*
     * Componente responsável por mostrar as informações de eventos ocorridos dentro do jogo.
     *
@@ -12,29 +12,33 @@ public class InformationPanel extends JScrollPane{
     *
     * */
 
+    JScrollPane scrollPane;
     JPanel contentPanel = new JPanel();
 
-    public InformationPanel() {
+    public InformationPanel(int controlVehiclePanelWidth, int controlPanelHeight) {
 
-        this.setViewportView(contentPanel);
-        this.setPreferredSize(new Dimension(300, 0));
-        this.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        this.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        setResizable(false);
+        setTitle("Log Events");
+        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.setSize(controlVehiclePanelWidth + 100, controlPanelHeight);
+
+        this.scrollPane = new JScrollPane(this.contentPanel);
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         this.contentPanel.setBackground(Color.darkGray);
         this.contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
+        this.add(scrollPane);
         this.setVisible(true);
     }
 
     public void addMessageEvent(String message){
-        // método para adicionar mudanças de eventos dentro da caixa de texto
 
         this.contentPanel.add(this.addLabelEventFormatted(message));
 
-        // forçando o scroll até o ultimo evento ocorrido
         SwingUtilities.invokeLater(() -> {
-            JScrollBar verticalScrollBar = getVerticalScrollBar();
+            JScrollBar verticalScrollBar = this.scrollPane.getVerticalScrollBar();
             verticalScrollBar.setValue(verticalScrollBar.getMaximum());
         });
 
@@ -43,8 +47,6 @@ public class InformationPanel extends JScrollPane{
     }
 
     public JLabel addLabelEventFormatted(String message){
-        // adicionar formatação das labels, pois elas são plain text
-
         JLabel event = new JLabel(message);
 
         event.setOpaque(true);
