@@ -52,7 +52,7 @@ public class Driver extends Thread {
     }
 
     public String Message(String message) {
-        Message(message);
+        System.out.println(message);
         return message;
     }
 
