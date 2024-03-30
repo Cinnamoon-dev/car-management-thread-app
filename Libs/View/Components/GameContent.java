@@ -4,9 +4,8 @@ import Libs.Driver;
 
 import java.awt.*;
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Objects;
+import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 
 
@@ -77,7 +76,10 @@ public class GameContent extends JPanel{
 
         if(drivers != null) {
             for(Driver driver : this.drivers){
+                g2d.setFont(new Font("Arial", Font.BOLD, 32));
+                g2d.setColor(Color.WHITE);
                 g2d.drawImage(driver.carImage, driver.xPosition, driver.yPosition, null);
+                g2d.drawString(driver.identifier, driver.xPosition + 4, driver.yPosition + 32);
             }
         }
     }
