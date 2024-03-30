@@ -5,6 +5,7 @@ import Libs.View.Components.GameViewBoard;
 import Libs.View.Components.InformationPanel;
 
 import javax.swing.*;
+import java.awt.*;
 
 
 public class MainView extends JFrame{
@@ -23,18 +24,33 @@ public class MainView extends JFrame{
     public static InformationPanel informationViewBoard;
 
     final int InformationPanelWidth = 512;
-    final int InformationPanelHeight = 300;
+    final int InformationPanelHeight = 256;
     final int ControlVehiclePanelWidth = InformationPanelWidth;
 
     public MainView(){
 
+        JFrame myframe = new JFrame();
+
         MainView.gameViewBoard = new GameViewBoard();
         FormInsertVehicle formInsertVehicle = new FormInsertVehicle(ControlVehiclePanelWidth);
-        MainView.informationViewBoard = new InformationPanel(ControlVehiclePanelWidth, InformationPanelHeight);
+        MainView.informationViewBoard  = new InformationPanel(ControlVehiclePanelWidth, InformationPanelHeight);
 
-        MainView.informationViewBoard.setLocation(0, 0);
-        MainView.gameViewBoard.setLocation(MainView.informationViewBoard.getWidth() + 20, 0);
-        formInsertVehicle.setLocation(gameViewBoard.getWidth() + MainView.informationViewBoard.getWidth() + 20, 0);
+        myframe.setSize(InformationPanelWidth + 150,512);
+        myframe.setTitle("Controle Do Jogo");
+
+        JPanel jContentPanel = new JPanel();
+        jContentPanel.setAlignmentX(LEFT_ALIGNMENT);
+
+        jContentPanel.setLayout(new BoxLayout(jContentPanel, BoxLayout.Y_AXIS));
+        jContentPanel.add(formInsertVehicle);
+        jContentPanel.add(MainView.informationViewBoard);
+
+        myframe.add(jContentPanel);
+        myframe.setResizable(false);
+        myframe.setVisible(true);
+
+        myframe.setLocation(0, 0);
+        MainView.gameViewBoard.setLocation(myframe.getWidth() + 20, 0);
     }
 }
 
