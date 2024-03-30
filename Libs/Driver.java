@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.Arrays;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -109,7 +110,7 @@ public class Driver implements Runnable {
         MainView.informationViewBoard.addMessageEvent(message);
     }
 
-    public void crossBridge(char sideReference, boolean isCommingBack) {
+    public void crossBridge(char sideReference, boolean isComingBack) {
         Date arrivalDate = new Date();
 
         down(queue_mutex);
@@ -125,11 +126,11 @@ public class Driver implements Runnable {
 
         while(getAgeInSeconds(arrivalDate) < this.crossingDuration) {
 
-            if(sideReference == 'L' && !isCommingBack || sideReference == 'R' && isCommingBack){
+            if(sideReference == 'L' && !isComingBack || sideReference == 'R' && isComingBack){
                 this.moveCarHorizontal(7, timePerBlock);
             }
 
-            if(sideReference == 'L' && isCommingBack || sideReference == 'R' && !isCommingBack){
+            if(sideReference == 'L' && isComingBack || sideReference == 'R' && !isComingBack){
                 this.moveCarHorizontal(-7, timePerBlock);
             }
 
