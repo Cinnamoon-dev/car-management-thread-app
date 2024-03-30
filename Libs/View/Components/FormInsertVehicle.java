@@ -7,7 +7,7 @@ import java.awt.*;
 import javax.swing.*;
 
 
-public class FormInsertVehicle extends JFrame {
+public class FormInsertVehicle extends JPanel {
 
     /*
      * Formulário para pegar os dados de condições de existencia de um determinado veiculo.
@@ -17,38 +17,30 @@ public class FormInsertVehicle extends JFrame {
 
     public FormInsertVehicle(int maxComponentSizeWidth){
 
-        setResizable(false);
-        setTitle("Insert New Driver");
-        setSize(320, 220);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-
-        JPanel panelContainer = new JPanel();
-        panelContainer.setLayout(new BoxLayout(panelContainer, BoxLayout.Y_AXIS));
-        panelContainer.setPreferredSize(new Dimension(maxComponentSizeWidth, 0));
+        setPreferredSize(new Dimension(maxComponentSizeWidth, 150));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JButton insertLeft = new JButton("Insert Left");
-        JButton insertRigth = new JButton("Insert Rigth");
+        JButton insertRigth = new JButton("Insert Right");
         JLabel travessiaLabel = new JLabel("Tempo de Travessia:");
         JLabel permanenciaLabel = new JLabel("Tempo de Permanência:");
         JTextField tempo_travessia =  new JTextField();
         JTextField tempo_permanencia = new JTextField();
 
-        insertLeft.setMaximumSize(new Dimension(maxComponentSizeWidth, 75));
-        insertRigth.setMaximumSize(new Dimension(maxComponentSizeWidth, 75));
+        JPanel buttonsBox = new JPanel();
+        buttonsBox.setLayout(new BoxLayout(buttonsBox, BoxLayout.X_AXIS));
+        buttonsBox.setPreferredSize(new Dimension(maxComponentSizeWidth, 50));
+        buttonsBox.setAlignmentX(0);
+        buttonsBox.add(insertLeft);
+        buttonsBox.add(insertRigth);
 
-        JPanel ButtonsBox = new JPanel();
-        ButtonsBox.setAlignmentX(0);
-        ButtonsBox.add(insertLeft);
-        ButtonsBox.add(insertRigth);
-        ButtonsBox.setVisible(true);
+        this.add(travessiaLabel);
+        this.add(tempo_travessia);
+        this.add(permanenciaLabel);
+        this.add(tempo_permanencia);
+        this.add(buttonsBox);
 
-        panelContainer.add(travessiaLabel);
-        panelContainer.add(tempo_travessia);
-        panelContainer.add(permanenciaLabel);
-        panelContainer.add(tempo_permanencia);
-        panelContainer.add(ButtonsBox);
-
-        insertLeft.addActionListener(_ -> {
+        insertLeft.addActionListener( _ -> {
             Driver driver = createDriver('L', tempo_travessia.getText(), tempo_permanencia.getText());
             this.clearState(tempo_permanencia, tempo_travessia);
 
@@ -58,7 +50,7 @@ public class FormInsertVehicle extends JFrame {
             driverThread.start(); // Inicia a thread do motorista
         });
 
-        insertRigth.addActionListener(_ -> {
+        insertRigth.addActionListener( _ -> {
             Driver driver = createDriver('R', tempo_travessia.getText(), tempo_permanencia.getText());
             this.clearState(tempo_permanencia, tempo_travessia);
 
@@ -67,9 +59,6 @@ public class FormInsertVehicle extends JFrame {
             Thread driverThread = new Thread(driver);
             driverThread.start(); // Inicia a thread do motorista
         });
-
-        this.add(panelContainer);
-        this.setVisible(true);
     }
 
     private Driver createDriver(char originSideVehicle, String tempo_travessia, String tempo_permanencia){
