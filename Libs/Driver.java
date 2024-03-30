@@ -2,29 +2,14 @@ package Libs;
 
 import Libs.View.MainView;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.Arrays;
+import java.util.ArrayList;
+import javax.imageio.ImageIO;
 import java.util.concurrent.Semaphore;
 
-
-class ParkingPosition{
-    public int xPosition;
-    public int yPosition;
-    Driver driverOcuppied;
-
-    public ParkingPosition(int x, int y){
-        this.xPosition = x;
-        this.yPosition = y;
-    }
-
-    void setDriverOcuppied(Driver driver){
-        this.driverOcuppied = driver;
-    }
-}
 
 public class Driver implements Runnable {
 
@@ -38,6 +23,7 @@ public class Driver implements Runnable {
 
     public static Semaphore queue_mutex = new Semaphore(1);
     private static final ArrayList<String> crossingQueue = new ArrayList<String>();
+    public static Semaphore controlDeleteDriver = new Semaphore(1);
 
     public static int left_count = 0;
     public static int right_count = 0;
@@ -46,8 +32,6 @@ public class Driver implements Runnable {
     public static Semaphore right_mutex = new Semaphore(1);
     public static Semaphore parking_mutex = new Semaphore(1);
 
-
-    // paint variables
     public Image carImage = null;
 
     public int xPosition = 0;
@@ -57,46 +41,48 @@ public class Driver implements Runnable {
         // mapped left parking positions
         for(int x = 0 ; x < 2 ; ++x){
             for(int y = 0 ; y < 5; ++y){
-                parking_right.add(new ParkingPosition(416 + x*32, 358 + y*32));
+                parking_right.add(new ParkingPosition(416 + x*32, 320 + y*32));
             }
         }
 
-        for (ParkingPosition parkingPosition : parking_right){
-            System.out.println(parkingPosition.xPosition + " " + parkingPosition.yPosition);
-        }
-
-
-        // mapped parking right pos
+        // mapped parking right positions
         for(int x = 0; x < 2; ++x){
             for(int y = 0 ; y < 5; ++y){
-                parking_left.add(new ParkingPosition(32 + x*32, 358 + y*32));
+                parking_left.add(new ParkingPosition(32 + x*32, 320 + y*32));
             }
-        }
-
-        for (ParkingPosition parkingPosition : parking_left){
-            System.out.println(parkingPosition.xPosition + " " + parkingPosition.yPosition);
         }
     }
 
-    public Driver(Character originalSide, String identifier, Integer crossingDuration, Integer stayDuration) {
-
-        try  {
-            this.carImage = ImageIO.read(new File("./Libs/View/Assets/TankRed.png"));
-        } catch (Exception e)  {
-            e.printStackTrace();
-        }
+    public Driver(Character originalSide, String identifier, Integer crossingDuration, Integer stayDuration){
 
         this.identifier = identifier;
         this.originalSide = originalSide;
         this.stayDuration = stayDuration;
         this.crossingDuration = crossingDuration;
 
+        int changeImageNumber = Integer.parseInt(this.identifier)%2;
+
+        System.out.println(changeImageNumber);
+
         if(originalSide == 'L'){
-            // TODO MUDAR A IMAGEM DO VEICULO
+            // Vermelho e Branco
             xPosition = 32;
+            try  {
+                this.carImage = ImageIO.read(new File("./Libs/View/Assets/Cars/Left/" + (changeImageNumber == 0 ? "Car1.png" : "Car2.png")));
+
+            } catch (Exception e)  {
+                e.printStackTrace();
+            }
+
         }else{
-            // TODO MUDAR A IMAGEM DO VEICULO
+            // Amarelo e Azul
             xPosition = 448;
+            try  {
+                this.carImage = ImageIO.read(new File("./Libs/View/Assets/Cars/Right/" + (changeImageNumber == 0 ? "Car1.png" : "Car2.png")));
+
+            } catch (Exception e)  {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -116,7 +102,7 @@ public class Driver implements Runnable {
         MainView.informationViewBoard.addMessageEvent(message);
     }
 
-    public void crossBridge() {
+    public void crossBridge(char sideReference, boolean isCommingBack) {
         Date arrivalDate = new Date();
 
         down(queue_mutex);
@@ -127,7 +113,19 @@ public class Driver implements Runnable {
 
         up(queue_mutex);
 
+        this.moveCarVertical(1, 0.5F);
+        float timePerBlock = (float) this.crossingDuration/7;
+
         while(getAgeInSeconds(arrivalDate) < this.crossingDuration) {
+
+            if(sideReference == 'L' && !isCommingBack || sideReference == 'R' && isCommingBack){
+                this.moveCarHorizontal(7, timePerBlock);
+            }
+
+            if(sideReference == 'L' && isCommingBack || sideReference == 'R' && !isCommingBack){
+                this.moveCarHorizontal(-7, timePerBlock);
+            }
+
             new Date().getTime();
         }
 
@@ -139,31 +137,52 @@ public class Driver implements Runnable {
         }
 
         crossingQueue.remove(this.identifier);
-        if(this.originalSide.equals('R')) {
+        up(queue_mutex);
+
+        if(this.originalSide =='R') {
             message(this.identifier + " arrived at L");
             message(Arrays.toString(crossingQueue.toArray()));
-            up(queue_mutex);
-            return;
+        } else {
+            message(this.identifier + " arrived at R");
+            message(Arrays.toString(crossingQueue.toArray()));
         }
-        message(this.identifier + " arrived at R");
-        message(Arrays.toString(crossingQueue.toArray()));
+
+        this.moveCarVertical(1, 0.5F);
+
         up(queue_mutex);
+
     }
 
     public void waitInOtherSide() {
         Date arrivalTime = new Date();
 
-        if(this.originalSide.equals('R')) {
+        down(parking_mutex);
+        if(this.originalSide == 'R') {
+            this.enterParking(parking_left);
             message(this.identifier + " is waiting at side " + "L");
-            return;
         }
-        message(this.identifier + " is waiting at side " + "R");
 
-        // Core logic below
-        // Remove prints when done with debugging
+        if(this.originalSide == 'L'){
+            this.enterParking(parking_right);
+            message(this.identifier + " is waiting at side " + "R");
+        }
+
+        this.forceRepaintGamePanel();
+        up(parking_mutex);
+
         while (getAgeInSeconds(arrivalTime) < this.stayDuration) {
             new Date().getTime();
         }
+
+        if(this.originalSide == 'R'){
+            this.exitParking(parking_left, 32,192);
+        }
+
+        if(this.originalSide == 'L'){
+            this.exitParking(parking_right, 448, 192);
+        }
+
+        this.forceRepaintGamePanel();
         message("Time passed: " + getAgeInSeconds(arrivalTime));
     }
 
@@ -174,6 +193,10 @@ public class Driver implements Runnable {
 
     public void run() {
         if(this.originalSide == 'R') {
+
+            this.moveCarHorizontal(-3, 0.5F);
+            this.moveCarVertical(5, 0.5F);
+
             down(right_mutex);
             right_count = right_count + 1;
             message("RC before: " + right_count);
@@ -182,7 +205,7 @@ public class Driver implements Runnable {
             }
             up(right_mutex);
 
-            this.crossBridge();
+            this.crossBridge(this.originalSide, false);
 
             down(right_mutex);
             right_count = right_count - 1;
@@ -194,8 +217,6 @@ public class Driver implements Runnable {
 
             this.waitInOtherSide();
 
-            // Calling the left_count must happen after the wait method
-            // Because the car will only go back to traffic after the waiting period
             down(left_mutex);
             left_count = left_count + 1;
             message("LC before: " + left_count);
@@ -204,7 +225,10 @@ public class Driver implements Runnable {
             }
             up(left_mutex);
 
-            this.crossBridge();
+            this.moveCarHorizontal(3, 0.5F);
+            this.moveCarVertical(5, 0.5F);
+
+            this.crossBridge(this.originalSide, true);
 
             down(left_mutex);
             left_count = left_count - 1;
@@ -213,8 +237,15 @@ public class Driver implements Runnable {
                 up(traffic);
             }
             up(left_mutex);
-        }
-        else {
+
+            down(controlDeleteDriver);
+            MainView.gameViewBoard.gameContent.removeDriver(this);
+            up(controlDeleteDriver);
+
+            this.forceRepaintGamePanel();
+
+        } else {
+
             this.moveCarHorizontal(3, 0.5F);
             this.moveCarVertical(5, 0.5F);
 
@@ -226,11 +257,7 @@ public class Driver implements Runnable {
             }
             up(left_mutex);
 
-            // TODO ESSA LOGICA DEVE ESTAR DENTRO DO CROSSBRIDGE PARA ATRAVESSAR JÁ CONTANDO O TEMPO
-            this.moveCarVertical(1, 0.5F);
-            this.moveCarHorizontal(6, 1); // ESSE TEMPO DEVE VARIAR DE ACORDO COM O TEMPO DE TRAVESSIA
-
-            this.crossBridge();
+            this.crossBridge(this.originalSide, false);
 
             down(left_mutex);
             left_count = left_count - 1;
@@ -240,22 +267,7 @@ public class Driver implements Runnable {
             }
             up(left_mutex);
 
-            this.moveCarHorizontal(1, 0.5F);
-            this.moveCarVertical(1, 0.5F);
-
-            // logica para inserir no parking
-            down(parking_mutex);
-            this.enterParking(parking_right);
-            this.forceRepaintGamePanel();
-            up(parking_mutex);
-
             this.waitInOtherSide();
-
-            down(parking_mutex);
-            this.exitParking(parking_right, 480, 192);
-            this.forceRepaintGamePanel();
-            up(parking_mutex);
-
 
             down(right_mutex);
             right_count = right_count + 1;
@@ -265,13 +277,10 @@ public class Driver implements Runnable {
             }
             up(right_mutex);
 
-            // mover o carro para o ponto L
-            this.moveCarHorizontal(-4, 0.5F);
-            this.moveCarVertical(6, 0.5F);
+            this.moveCarHorizontal(-3, 0.5F);
+            this.moveCarVertical(5, 0.5F);
 
-            this.crossBridge();
-
-            this.moveCarHorizontal(-5, 0.5F);
+            this.crossBridge(this.originalSide, true);
 
             down(right_mutex);
             right_count = right_count - 1;
@@ -281,10 +290,10 @@ public class Driver implements Runnable {
             }
             up(right_mutex);
 
-            this.moveCarHorizontal(-2, 0.5F);
-            this.moveCarVertical(1, 0.5F);
-
+            down(controlDeleteDriver);
             MainView.gameViewBoard.gameContent.removeDriver(this);
+            up(controlDeleteDriver);
+
             this.forceRepaintGamePanel();
         }
     }
@@ -305,7 +314,7 @@ public class Driver implements Runnable {
             long startTime = System.currentTimeMillis();
 
             // verifica se a proxima posição está livre.
-            while(MainView.gameViewBoard.gameContent.preventColision(xPosition + moveQuantityPixel, yPosition, this.identifier)){
+            while(MainView.gameViewBoard.gameContent.preventCollision(xPosition + moveQuantityPixel, yPosition, this.identifier)){
                 new Date().getTime();
             }
             this.xPosition += moveQuantityPixel;
@@ -335,7 +344,7 @@ public class Driver implements Runnable {
             long startTime = System.currentTimeMillis();
 
             // verifica se a proxima posição está livre.
-            while(MainView.gameViewBoard.gameContent.preventColision(xPosition, yPosition + moveQuantityPixel, this.identifier)){
+            while(MainView.gameViewBoard.gameContent.preventCollision(xPosition, yPosition + moveQuantityPixel, this.identifier)){
                 new Date().getTime();
             }
 
@@ -352,25 +361,37 @@ public class Driver implements Runnable {
 
     public void enterParking(ArrayList<ParkingPosition> parkingVector){
         for(ParkingPosition parkingPosition : parkingVector){
-            if(parkingPosition.driverOcuppied == null){
+
+            Driver driverInVacancy = parkingPosition.driverOcuppied;
+
+            if (driverInVacancy == null) {
+                parkingPosition.setDriverOcuppied(this);
                 xPosition = parkingPosition.xPosition;
                 yPosition = parkingPosition.yPosition;
-                parkingPosition.setDriverOcuppied(this);
+                break;
             }
         }
-        this.forceRepaintGamePanel();
     }
 
     public void exitParking(ArrayList<ParkingPosition> parkingVector, int xExit, int yExit){
-        for(ParkingPosition parkingPosition : parkingVector){
-            if(!parkingPosition.driverOcuppied.equals(this)){
-                // start right position
+        for (ParkingPosition parkingPosition : parkingVector) {
+            Driver driverInVacancy = parkingPosition.driverOcuppied;
+
+            if(driverInVacancy == null){ continue; }
+
+            // se o carro que tiver na vaga bater com as coordenadas do veiculo é o meu veiculo
+            if (driverInVacancy.xPosition == xPosition && driverInVacancy.yPosition == yPosition) {
+
+                // evita colisão na saida do parking
+                while(MainView.gameViewBoard.gameContent.preventCollision(xExit, yExit, this.identifier)){
+                    new Date().getTime();
+                }
+                parkingPosition.vacateVacancy();
                 xPosition = xExit;
                 yPosition = yExit;
-                parkingPosition.setDriverOcuppied(this);
+                break;
             }
         }
-        this.forceRepaintGamePanel();
     }
 
     public void forceRepaintGamePanel(){
