@@ -16,7 +16,7 @@ public class MainView extends JFrame{
     *   InformationPanel - Uma view para visualização da mudança de estado das threads dos veiculos.
     *   ControlVehiclePanel - View responsável por dispor os controllers de inserção de veiculo e seus atributos (tempo de travessia, tempo de permanencia ...)
     *
-    * reference : https://excalidraw.com/#json=_wFBU5tuFjNCbSIckWDAa,ax4NLfgzU-rUoPYsYSROug
+    * reference : https://excalidraw.com/#json=sTCY5mpTyQVPZxNsE7tOZ,ZhLkejZJMLM_zG5cpyEUmA
     * */
 
     public static GameViewBoard gameViewBoard;
@@ -28,20 +28,13 @@ public class MainView extends JFrame{
 
     public MainView(){
 
-        GameViewBoard gameViewBoard = new GameViewBoard();
+        MainView.gameViewBoard = new GameViewBoard();
         FormInsertVehicle formInsertVehicle = new FormInsertVehicle(ControlVehiclePanelWidth);
-        InformationPanel informationViewBoard = new InformationPanel(ControlVehiclePanelWidth, InformationPanelHeight);
-
-        MainView.gameViewBoard = gameViewBoard;
-        MainView.informationViewBoard = informationViewBoard;
+        MainView.informationViewBoard = new InformationPanel(ControlVehiclePanelWidth, InformationPanelHeight);
 
         MainView.informationViewBoard.setLocation(0, 0);
         MainView.gameViewBoard.setLocation(MainView.informationViewBoard.getWidth() + 20, 0);
         formInsertVehicle.setLocation(gameViewBoard.getWidth() + MainView.informationViewBoard.getWidth() + 20, 0);
-    }
-
-    public static InformationPanel getInformationViewBoard(){
-        return informationViewBoard;
     }
 }
 
