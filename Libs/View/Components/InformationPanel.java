@@ -3,51 +3,46 @@ package Libs.View.Components;
 import javax.swing.*;
 import java.awt.*;
 
-public class InformationPanel extends JFrame{
-    /*
-    * Componente responsável por mostrar as informações de eventos ocorridos dentro do jogo.
-    *
-    * Aqui o uso de LayoutManagers é exagerado para que as informações de atualizações fiquem
-    * organizadas da forma correta dentro do ControlPanel, portanto, evitar alterá-las.
-    *
-    * */
+public class InformationPanel extends JPanel {
 
-    JScrollPane scrollPane;
     JPanel contentPanel = new JPanel();
+    JScrollPane jScrollPane = null;
 
     public InformationPanel(int controlVehiclePanelWidth, int controlPanelHeight) {
-
-        setResizable(false);
-        setTitle("Log Events");
-        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        this.setSize(controlVehiclePanelWidth + 100, controlPanelHeight);
-
-        this.scrollPane = new JScrollPane(this.contentPanel);
-        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         this.contentPanel.setBackground(Color.darkGray);
         this.contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
-        this.add(scrollPane);
-        this.setVisible(true);
+        this.jScrollPane = new JScrollPane(contentPanel);
+        this.jScrollPane.setPreferredSize(new Dimension(controlVehiclePanelWidth + 52, controlPanelHeight));
+        this.jScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        this.jScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        this.add(jScrollPane);
     }
 
     public void addMessageEvent(String message){
 
-        this.contentPanel.add(this.addLabelEventFormatted(message));
+        JLabel jLabel = this.addLabelEventFormatted(message);
+        this.contentPanel.add(jLabel);
 
         SwingUtilities.invokeLater(() -> {
-            JScrollBar verticalScrollBar = this.scrollPane.getVerticalScrollBar();
+            JScrollBar verticalScrollBar = this.jScrollPane.getVerticalScrollBar();
             verticalScrollBar.setValue(verticalScrollBar.getMaximum());
         });
 
-        this.revalidate();
+        this.contentPanel.revalidate();
+        this.jScrollPane.revalidate();
+
+        this.jScrollPane.repaint();
+        this.contentPanel.repaint();
+
         this.repaint();
     }
 
     public JLabel addLabelEventFormatted(String message){
         JLabel event = new JLabel(message);
+        System.out.println(" Event Formatted Called");
 
         event.setOpaque(true);
         event.setForeground(Color.WHITE);
