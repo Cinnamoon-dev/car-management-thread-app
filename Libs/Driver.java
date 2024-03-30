@@ -4,11 +4,14 @@ import Libs.View.MainView;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.Arrays;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import java.util.concurrent.Semaphore;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class Driver implements Runnable {
@@ -33,6 +36,8 @@ public class Driver implements Runnable {
     public static Semaphore parking_mutex = new Semaphore(1);
 
     public Image carImage = null;
+    private String pathImage = null;
+    private String carNameImage = null;
 
     public int xPosition = 0;
     public int yPosition = 192;
@@ -62,23 +67,25 @@ public class Driver implements Runnable {
 
         int changeImageNumber = Integer.parseInt(this.identifier)%2;
 
-        System.out.println(changeImageNumber);
-
         if(originalSide == 'L'){
             // Vermelho e Branco
             xPosition = 32;
             try  {
-                this.carImage = ImageIO.read(new File("./Libs/View/Assets/Cars/Left/" + (changeImageNumber == 0 ? "Car1.png" : "Car2.png")));
+                this.carNameImage = changeImageNumber == 0 ? "Car1" : "Car2";
+                this.pathImage = "./Libs/View/Assets/Cars/Left/" + carNameImage + ".png";
+                this.carImage = ImageIO.read(new File(this.pathImage));
 
             } catch (Exception e)  {
                 e.printStackTrace();
             }
-
-        }else{
+        }
+        if(originalSide == 'R'){
             // Amarelo e Azul
             xPosition = 448;
             try  {
-                this.carImage = ImageIO.read(new File("./Libs/View/Assets/Cars/Right/" + (changeImageNumber == 0 ? "Car1.png" : "Car2.png")));
+                this.carNameImage = changeImageNumber == 0 ? "Car1" : "Car2";
+                this.pathImage = "./Libs/View/Assets/Cars/Right/"  + carNameImage + ".png";
+                this.carImage = ImageIO.read(new File(pathImage));
 
             } catch (Exception e)  {
                 e.printStackTrace();
@@ -150,7 +157,6 @@ public class Driver implements Runnable {
         this.moveCarVertical(1, 0.5F);
 
         up(queue_mutex);
-
     }
 
     public void waitInOtherSide() {
@@ -180,6 +186,16 @@ public class Driver implements Runnable {
 
         if(this.originalSide == 'L'){
             this.exitParking(parking_right, 448, 192);
+        }
+
+        // alterando a direção da imagem do veiculo ...
+        try{
+            String tempNameCarImage = this.carNameImage + "Reverse";
+            this.pathImage = this.pathImage.replace(this.carNameImage, tempNameCarImage);
+            this.carImage = ImageIO.read(new File(this.pathImage));
+
+        }catch (IOException e){
+            e.printStackTrace();
         }
 
         this.forceRepaintGamePanel();
@@ -389,7 +405,7 @@ public class Driver implements Runnable {
                 parkingPosition.vacateVacancy();
                 xPosition = xExit;
                 yPosition = yExit;
-                break;
+                return ;
             }
         }
     }
