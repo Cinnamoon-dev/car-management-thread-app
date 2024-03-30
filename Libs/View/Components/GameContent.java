@@ -5,7 +5,9 @@ import Libs.Driver;
 import java.awt.*;
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Objects;
+import java.util.concurrent.Semaphore;
 
 
 public class GameContent extends JPanel{
@@ -15,6 +17,7 @@ public class GameContent extends JPanel{
 
     final Image backgroundImage;
     private ArrayList<Driver> drivers;
+    public static Semaphore position_mutex = new Semaphore(1);
 
     public GameContent(){
         this.setPreferredSize(new Dimension(GAME_CONTENT_WIDTH,GAME_CONTENT_HEIGHT));
@@ -32,22 +35,36 @@ public class GameContent extends JPanel{
         repaint();
     }
 
-    public void removeDriver(Driver driver){
-        // Deve ser protegido por um mutex ??
-        this.drivers.remove(driver);
+    public static void down(Semaphore semaphore) {
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
-    public boolean preventColision(int x ,int y, String identificador){
-        for(Driver driver : this.drivers){
+    public static void up(Semaphore semaphore) {
+        semaphore.release();
+    }
 
-            if(Objects.equals(driver.identifier, identificador)){
+    public void removeDriver(Driver driver){
+        down(position_mutex);
+        this.drivers.remove(driver);
+        up(position_mutex);
+    }
+
+    public boolean preventCollision(int x , int y, String identificador) {
+        down(position_mutex);
+        for (Driver driver : this.drivers) {
+            if (Objects.equals(driver.identifier, identificador)) {
                 continue;
             }
-
-            if(driver.xPosition == x && driver.yPosition == y){
+            if (driver.xPosition == x && driver.yPosition == y) {
+                up(position_mutex);
                 return true;
             }
         }
+        up(position_mutex);
         return false;
     }
 
