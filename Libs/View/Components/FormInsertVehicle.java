@@ -40,7 +40,7 @@ public class FormInsertVehicle extends JPanel {
         this.add(tempo_permanencia);
         this.add(buttonsBox);
 
-        insertLeft.addActionListener( _ -> {
+        insertLeft.addActionListener( e -> {
             Driver driver = createDriver('L', tempo_travessia.getText(), tempo_permanencia.getText());
             this.clearState(tempo_permanencia, tempo_travessia);
 
@@ -50,7 +50,7 @@ public class FormInsertVehicle extends JPanel {
             driverThread.start(); // Inicia a thread do motorista
         });
 
-        insertRigth.addActionListener( _ -> {
+        insertRigth.addActionListener( e -> {
             Driver driver = createDriver('R', tempo_travessia.getText(), tempo_permanencia.getText());
             this.clearState(tempo_permanencia, tempo_travessia);
 
