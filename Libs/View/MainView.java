@@ -29,14 +29,14 @@ public class MainView extends JFrame{
 
     public MainView(){
 
-        JFrame myframe = new JFrame();
+        JFrame controlsFrame = new JFrame();
 
         MainView.gameViewBoard = new GameViewBoard();
         FormInsertVehicle formInsertVehicle = new FormInsertVehicle(ControlVehiclePanelWidth);
         MainView.informationViewBoard  = new InformationPanel(ControlVehiclePanelWidth, InformationPanelHeight);
 
-        myframe.setSize(InformationPanelWidth + 150,512);
-        myframe.setTitle("Controle Do Jogo");
+        controlsFrame.setSize(InformationPanelWidth + 150,512);
+        controlsFrame.setTitle("Controle Do Jogo");
 
         JPanel jContentPanel = new JPanel();
         jContentPanel.setAlignmentX(LEFT_ALIGNMENT);
@@ -45,12 +45,12 @@ public class MainView extends JFrame{
         jContentPanel.add(formInsertVehicle);
         jContentPanel.add(MainView.informationViewBoard);
 
-        myframe.add(jContentPanel);
-        myframe.setResizable(false);
-        myframe.setVisible(true);
+        controlsFrame.add(jContentPanel);
+        controlsFrame.setResizable(false);
+        controlsFrame.setVisible(true);
 
-        myframe.setLocation(0, 0);
-        MainView.gameViewBoard.setLocation(myframe.getWidth() + 20, 0);
+        controlsFrame.setLocation(0, 0);
+        MainView.gameViewBoard.setLocation(controlsFrame.getWidth() + 20, 0);
     }
 }
 
