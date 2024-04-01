@@ -9,10 +9,7 @@ import java.util.Date;
 import java.util.Arrays;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.util.concurrent.Semaphore;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class Driver implements Runnable {
@@ -22,12 +19,8 @@ public class Driver implements Runnable {
     private final Integer crossingDuration;
     private final Character originalSide; // 'L' or 'R'
 
-    static ArrayList<ParkingPosition> parking_left = new ArrayList<ParkingPosition>();
-    static ArrayList<ParkingPosition> parking_right = new ArrayList<ParkingPosition>();
-
     public static Semaphore queue_mutex = new Semaphore(1);
     private static final ArrayList<String> crossingQueue = new ArrayList<String>();
-    public static Semaphore controlDeleteDriver = new Semaphore(1);
 
     public static int left_count = 0;
     public static int right_count = 0;
@@ -36,22 +29,29 @@ public class Driver implements Runnable {
     public static Semaphore right_mutex = new Semaphore(1);
     public static Semaphore parking_mutex = new Semaphore(1);
 
+    // User Interface Variables
+    public static Semaphore controlDeleteDriver = new Semaphore(1);
+    
     public Image carImage = null;
     private String pathImage = null;
     private String carNameImage = null;
 
+    // Initial Coordinates
     public int xPosition = 0;
     public int yPosition = 192;
 
+    static ArrayList<ParkingPosition> parking_left = new ArrayList<ParkingPosition>();
+    static ArrayList<ParkingPosition> parking_right = new ArrayList<ParkingPosition>();
+
     static {
-        // mapped left parking positions
+        // mapping left parking positions
         for(int x = 0 ; x < 2 ; ++x){
             for(int y = 0 ; y < 5; ++y){
                 parking_right.add(new ParkingPosition(416 + x*32, 320 + y*32));
             }
         }
 
-        // mapped parking right positions
+        // mapping parking right positions
         for(int x = 0; x < 2; ++x){
             for(int y = 0 ; y < 5; ++y){
                 parking_left.add(new ParkingPosition(32 + x*32, 320 + y*32));
@@ -177,6 +177,7 @@ public class Driver implements Runnable {
         this.forceRepaintGamePanel();
         up(parking_mutex);
 
+        // Wait while consuming CPU
         while (getAgeInSeconds(arrivalTime) < this.stayDuration) {
             new Date().getTime();
         }
