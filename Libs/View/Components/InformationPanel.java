@@ -42,7 +42,6 @@ public class InformationPanel extends JPanel {
 
     public JLabel addLabelEventFormatted(String message){
         JLabel event = new JLabel(message);
-        System.out.println(" Event Formatted Called");
 
         event.setOpaque(true);
         event.setForeground(Color.WHITE);
