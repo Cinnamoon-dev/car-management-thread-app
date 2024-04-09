@@ -75,7 +75,7 @@ public class Driver implements Runnable {
 
         if(originalSide == 'L'){
             xPosition = 32;
-            pathImageOriginal = "/Libs/View/Assets/Cars/Left/" + carNameImage + ".png";
+            pathImageOriginal = "Libs/View/Assets/Cars/Left/" + carNameImage + ".png";
 
             try  {
                 this.carImage = new ImageIcon(getClass().getClassLoader().getResource(pathImageOriginal)).getImage();
@@ -84,7 +84,7 @@ public class Driver implements Runnable {
             }
         } else {
             xPosition = 448;
-            pathImageOriginal = "/Libs/View/Assets/Cars/Right/"  + carNameImage + ".png";
+            pathImageOriginal = "Libs/View/Assets/Cars/Right/"  + carNameImage + ".png";
 
             try  {
                 this.carImage = new ImageIcon(getClass().getClassLoader().getResource(pathImageOriginal)).getImage();

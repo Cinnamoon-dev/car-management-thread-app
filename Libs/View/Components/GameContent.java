@@ -23,7 +23,7 @@ public class GameContent extends JPanel{
         this.setBackground(Color.black);
 
         //this.backgroundImage = new ImageIcon("./Libs/View/Assets/MapAsset.png").getImage();
-        this.backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("./Libs/View/Assets/MapAsset.png")).getImage();
+        this.backgroundImage = new ImageIcon(getClass().getResource("/Libs/View/Assets/MapAsset.png")).getImage();
     }
 
     public void setDriver(Driver driver){
