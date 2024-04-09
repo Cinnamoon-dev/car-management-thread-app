@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.Arrays;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 import java.util.concurrent.Semaphore;
 
@@ -74,19 +75,19 @@ public class Driver implements Runnable {
 
         if(originalSide == 'L'){
             xPosition = 32;
-            pathImageOriginal = "./Libs/View/Assets/Cars/Left/" + carNameImage + ".png";
+            pathImageOriginal = "/Libs/View/Assets/Cars/Left/" + carNameImage + ".png";
 
             try  {
-                this.carImage = ImageIO.read(new File(pathImageOriginal));
+                this.carImage = new ImageIcon(getClass().getClassLoader().getResource(pathImageOriginal)).getImage();
             } catch (Exception e)  {
                 e.printStackTrace();
             }
         } else {
             xPosition = 448;
-            pathImageOriginal = "./Libs/View/Assets/Cars/Right/"  + carNameImage + ".png";
+            pathImageOriginal = "/Libs/View/Assets/Cars/Right/"  + carNameImage + ".png";
 
             try  {
-                this.carImage = ImageIO.read(new File(pathImageOriginal));
+                this.carImage = new ImageIcon(getClass().getClassLoader().getResource(pathImageOriginal)).getImage();
             } catch (Exception e)  {
                 e.printStackTrace();
             }
@@ -220,14 +221,9 @@ public class Driver implements Runnable {
     }
 
     public void saveReverseCarImage(String pathImage, String carNameImage){
-        try{
-            String tempNameCarImage = carNameImage + "Reverse";
-            tempNameCarImage = pathImage.replace(carNameImage, tempNameCarImage);
-            this.carImageReverse = ImageIO.read(new File(tempNameCarImage));
-
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+        String tempNameCarImage = carNameImage + "Reverse";
+        tempNameCarImage = pathImage.replace(carNameImage, tempNameCarImage);
+        this.carImageReverse = new ImageIcon(getClass().getClassLoader().getResource(tempNameCarImage)).getImage();
     }
 
     public void setReverseCarImage(){
