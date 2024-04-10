@@ -5,10 +5,12 @@ import Libs.View.MainView;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.Arrays;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 import java.util.concurrent.Semaphore;
 
@@ -32,17 +34,17 @@ public class Driver implements Runnable {
 
     // User Interface Variables
     public static Semaphore controlDeleteDriver = new Semaphore(1);
-    
+
     public Image carImage = null;
-    private String pathImage = null;
-    private String carNameImage = null;
+    public Image carImageOriginal = null;
+    private Image carImageReverse = null;
 
     // Initial Coordinates
     public int xPosition = 0;
     public int yPosition = 192;
 
-    static ArrayList<ParkingPosition> parking_left = new ArrayList<ParkingPosition>();
-    static ArrayList<ParkingPosition> parking_right = new ArrayList<ParkingPosition>();
+    static ArrayList<ParkingPosition> parking_left = new ArrayList<>();
+    static ArrayList<ParkingPosition> parking_right = new ArrayList<>();
 
     static {
         // mapping left parking positions
@@ -67,32 +69,32 @@ public class Driver implements Runnable {
         this.stayDuration = stayDuration;
         this.crossingDuration = crossingDuration;
 
-        int changeImageNumber = Integer.parseInt(this.identifier)%2;
+        String pathImageOriginal = null;
+        int changeImageNumber = Integer.parseInt(this.identifier) % 2;
+        String carNameImage = changeImageNumber == 0 ? "Car1" : "Car2";
 
         if(originalSide == 'L'){
-            // Vermelho e Branco
             xPosition = 32;
-            try  {
-                this.carNameImage = changeImageNumber == 0 ? "Car1" : "Car2";
-                this.pathImage = "./Libs/View/Assets/Cars/Left/" + carNameImage + ".png";
-                this.carImage = ImageIO.read(new File(this.pathImage));
+            pathImageOriginal = "Libs/View/Assets/Cars/Left/" + carNameImage + ".png";
 
+            try  {
+                this.carImage = new ImageIcon(getClass().getClassLoader().getResource(pathImageOriginal)).getImage();
             } catch (Exception e)  {
                 e.printStackTrace();
             }
-        }
-        if(originalSide == 'R'){
-            // Amarelo e Azul
+        } else {
             xPosition = 448;
-            try  {
-                this.carNameImage = changeImageNumber == 0 ? "Car1" : "Car2";
-                this.pathImage = "./Libs/View/Assets/Cars/Right/"  + carNameImage + ".png";
-                this.carImage = ImageIO.read(new File(pathImage));
+            pathImageOriginal = "Libs/View/Assets/Cars/Right/"  + carNameImage + ".png";
 
+            try  {
+                this.carImage = new ImageIcon(getClass().getClassLoader().getResource(pathImageOriginal)).getImage();
             } catch (Exception e)  {
                 e.printStackTrace();
             }
         }
+
+        this.carImageOriginal = this.carImage;
+        this.saveReverseCarImage(pathImageOriginal, carNameImage);
     }
 
     public static void down(Semaphore semaphore) {
@@ -123,19 +125,28 @@ public class Driver implements Runnable {
         up(queue_mutex);
 
         this.moveCarVertical(1, 0.5F);
-        float timePerBlock = (float) this.crossingDuration/7;
+        int bridgesBlock = 6;
+        float timePerBlock = (float) this.crossingDuration/bridgesBlock;
 
         while(getAgeInSeconds(arrivalDate) < this.crossingDuration) {
 
             if(sideReference == 'L' && !isComingBack || sideReference == 'R' && isComingBack){
-                this.moveCarHorizontal(7, timePerBlock);
+                this.moveCarHorizontal(bridgesBlock, timePerBlock);
             }
 
             if(sideReference == 'L' && isComingBack || sideReference == 'R' && !isComingBack){
-                this.moveCarHorizontal(-7, timePerBlock);
+                this.moveCarHorizontal(-bridgesBlock, timePerBlock);
             }
 
             new Date().getTime();
+        }
+
+        if(sideReference == 'L' && !isComingBack || sideReference == 'R' && isComingBack){
+            this.moveCarHorizontal(1, 0.5F);
+        }
+
+        if(sideReference == 'L' && isComingBack || sideReference == 'R' && !isComingBack){
+            this.moveCarHorizontal(-1, 0.5F);
         }
 
         down(queue_mutex);
@@ -165,12 +176,10 @@ public class Driver implements Runnable {
         Date arrivalTime = new Date();
 
         down(parking_mutex);
-        if(this.originalSide == 'R') {
+        if(xPosition <= 192) {
             this.enterParking(parking_left);
             message(this.identifier + " is waiting at side " + "L");
-        }
-
-        if(this.originalSide == 'L'){
+        } else {
             this.enterParking(parking_right);
             message(this.identifier + " is waiting at side " + "R");
         }
@@ -178,31 +187,51 @@ public class Driver implements Runnable {
         this.forceRepaintGamePanel();
         up(parking_mutex);
 
+        int i = 0;
         // Wait while consuming CPU
         while (getAgeInSeconds(arrivalTime) < this.stayDuration) {
-            new Date().getTime();
+            if(i % 2 == 0){
+                this.setReverseCarImage();
+            } else {
+                this.setOriginalCarImage();
+            }
+            i++;
+            this.forceRepaintGamePanel();
         }
 
-        if(this.originalSide == 'R'){
+        if(xPosition <= 192){
             this.exitParking(parking_left, 32,192);
-        }
-
-        if(this.originalSide == 'L'){
+        } else {
             this.exitParking(parking_right, 448, 192);
         }
 
-        // alterando a direção da imagem do veiculo ...
-        try{
-            String tempNameCarImage = this.carNameImage + "Reverse";
-            this.pathImage = this.pathImage.replace(this.carNameImage, tempNameCarImage);
-            this.carImage = ImageIO.read(new File(this.pathImage));
+        this.carImage = this.carImageOriginal;
 
-        }catch (IOException e){
-            e.printStackTrace();
+        if(originalSide == 'R' && xPosition <= 192){
+            this.setReverseCarImage();
         }
+
+        if(originalSide == 'L' && xPosition > 192){
+            this.setReverseCarImage();
+        }
+        this.forceRepaintGamePanel();
 
         this.forceRepaintGamePanel();
         message("Time passed: " + getAgeInSeconds(arrivalTime));
+    }
+
+    public void saveReverseCarImage(String pathImage, String carNameImage){
+        String tempNameCarImage = carNameImage + "Reverse";
+        tempNameCarImage = pathImage.replace(carNameImage, tempNameCarImage);
+        this.carImageReverse = new ImageIcon(getClass().getClassLoader().getResource(tempNameCarImage)).getImage();
+    }
+
+    public void setReverseCarImage(){
+        this.carImage = this.carImageReverse;
+    }
+
+    public void setOriginalCarImage(){
+        this.carImage = this.carImageOriginal;
     }
 
     public static long getAgeInSeconds(Date initialTime) {
@@ -211,111 +240,107 @@ public class Driver implements Runnable {
     }
 
     public void run() {
-        if(this.originalSide == 'R') {
+        for(;;){
+            if(this.originalSide == 'R') {
 
-            this.moveCarHorizontal(-3, 0.5F);
-            this.moveCarVertical(5, 0.5F);
+                this.moveCarHorizontal(-3, 0.5F);
+                this.moveCarVertical(5, 0.5F);
 
-            down(right_mutex);
-            right_count = right_count + 1;
-            message("RC before: " + right_count);
-            if(right_count == 1) {
-                down(traffic);
+                down(right_mutex);
+                right_count = right_count + 1;
+                message("RC before: " + right_count);
+                if(right_count == 1) {
+                    down(traffic);
+                }
+                up(right_mutex);
+
+                this.crossBridge(this.originalSide, false);
+
+                down(right_mutex);
+                right_count = right_count - 1;
+                message("RC after: " + right_count);
+                if(right_count == 0) {
+                    up(traffic);
+                }
+                up(right_mutex);
+
+                this.waitInOtherSide();
+
+                down(left_mutex);
+                left_count = left_count + 1;
+                message("LC before: " + left_count);
+                if(left_count == 1) {
+                    down(traffic);
+                }
+                up(left_mutex);
+
+                this.moveCarHorizontal(3, 0.5F);
+                this.moveCarVertical(5, 0.5F);
+
+                this.crossBridge(this.originalSide, true);
+
+                down(left_mutex);
+                left_count = left_count - 1;
+                message("LC after: " + left_count);
+                if(left_count == 0) {
+                    up(traffic);
+                }
+                up(left_mutex);
+
+                this.waitInOtherSide();
+
+            } else {
+
+                this.moveCarHorizontal(3, 0.5F);
+                this.moveCarVertical(5, 0.5F);
+
+                down(left_mutex);
+                left_count = left_count + 1;
+                message("LC before: " + left_count);
+                if(left_count == 1) {
+                    down(traffic);
+                }
+                up(left_mutex);
+
+                this.crossBridge(this.originalSide, false);
+
+                down(left_mutex);
+                left_count = left_count - 1;
+                message("LC after: " + left_count);
+                if(left_count == 0) {
+                    up(traffic);
+                }
+                up(left_mutex);
+
+                this.waitInOtherSide();
+
+                down(right_mutex);
+                right_count = right_count + 1;
+                message("RC before: " + right_count);
+                if(right_count == 1) {
+                    down(traffic);
+                }
+                up(right_mutex);
+
+                this.moveCarHorizontal(-3, 0.5F);
+                this.moveCarVertical(5, 0.5F);
+
+                this.crossBridge(this.originalSide, true);
+
+                down(right_mutex);
+                right_count = right_count - 1;
+                message("RC after: " + right_count);
+                if(right_count == 0) {
+                    up(traffic);
+                }
+                up(right_mutex);
+
+                this.waitInOtherSide();
             }
-            up(right_mutex);
-
-            this.crossBridge(this.originalSide, false);
-
-            down(right_mutex);
-            right_count = right_count - 1;
-            message("RC after: " + right_count);
-            if(right_count == 0) {
-                up(traffic);
-            }
-            up(right_mutex);
-
-            this.waitInOtherSide();
-
-            down(left_mutex);
-            left_count = left_count + 1;
-            message("LC before: " + left_count);
-            if(left_count == 1) {
-                down(traffic);
-            }
-            up(left_mutex);
-
-            this.moveCarHorizontal(3, 0.5F);
-            this.moveCarVertical(5, 0.5F);
-
-            this.crossBridge(this.originalSide, true);
-
-            down(left_mutex);
-            left_count = left_count - 1;
-            message("LC after: " + left_count);
-            if(left_count == 0) {
-                up(traffic);
-            }
-            up(left_mutex);
-
-            down(controlDeleteDriver);
-            MainView.gameViewBoard.gameContent.removeDriver(this);
-            up(controlDeleteDriver);
-
-            this.forceRepaintGamePanel();
-
-        } else {
-
-            this.moveCarHorizontal(3, 0.5F);
-            this.moveCarVertical(5, 0.5F);
-
-            down(left_mutex);
-            left_count = left_count + 1;
-            message("LC before: " + left_count);
-            if(left_count == 1) {
-                down(traffic);
-            }
-            up(left_mutex);
-
-            this.crossBridge(this.originalSide, false);
-
-            down(left_mutex);
-            left_count = left_count - 1;
-            message("LC after: " + left_count);
-            if(left_count == 0) {
-                up(traffic);
-            }
-            up(left_mutex);
-
-            this.waitInOtherSide();
-
-            down(right_mutex);
-            right_count = right_count + 1;
-            message("RC before: " + right_count);
-            if(right_count == 1) {
-                down(traffic);
-            }
-            up(right_mutex);
-
-            this.moveCarHorizontal(-3, 0.5F);
-            this.moveCarVertical(5, 0.5F);
-
-            this.crossBridge(this.originalSide, true);
-
-            down(right_mutex);
-            right_count = right_count - 1;
-            message("RC after: " + right_count);
-            if(right_count == 0) {
-                up(traffic);
-            }
-            up(right_mutex);
-
-            down(controlDeleteDriver);
-            MainView.gameViewBoard.gameContent.removeDriver(this);
-            up(controlDeleteDriver);
-
             this.forceRepaintGamePanel();
         }
     }
+
 
     public void moveCarHorizontal(int quantityBlocks, float delayByMoveSeconds){
 
