@@ -20,3 +20,6 @@ Era necessário que toda a lógica de movimento de um carro estivesse dentro da 
 
 ### Solução
 Tomamos como base um dos problemas clássicos, Escritores e Leitores, e o modificamos para permitir que vários carros de apenas um lado pudessem agir por vez.
+
+### Uso
+Executar o `car.jar` executavél já presente no repositório ou criar um novo usando o script `build.sh`.
