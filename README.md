@@ -23,3 +23,6 @@ Tomamos como base um dos problemas clássicos, Escritores e Leitores, e o modifi
 
 ### Uso
 Executar o `car.jar` executavél já presente no repositório ou criar um novo usando o script `build.sh`.
+```bash
+$ java -jar car.jar
+```
